@@ -23,6 +23,14 @@ Spring Boot Notes:
   <li>Class <code>ResponseEntity</code> is an extension of HttpEntity that adds an HttpStatusCode status code. Used in RestTemplate as well as in @Controller methods.</li>
 </ul>
 
+Docker Commands:
+<ul>
+  <li>~<code>docker container exec -it postgresdb psql -U postgres</code></li>
+  <li>~<code>\connect expensetrackerdb</code></li>
+  <li>select * from et_users;</li>
+  <li>~<code>delete from et_users;</code></li>
+</ul>
+
 <b>Process:</b> <br>
 <a href="https://www.youtube.com/watch?v=fVq9aPNGLAg&list=UULFLCn3zEnB0h0Y2GVhTLtHkg&index=12">1 - Installation process</a>
 <ul>
@@ -128,7 +136,7 @@ Spring Boot Notes:
   <li>Update <code>UserResource</code> 
     <ul>
       <li>Use <code>@Autowired UserService userService;</code>. </li>
-      <li>Update registerUser to return <code>ResponseEntity<Map<String,String>></code> instead of String. Class <code>ResponseEntity</code> is an extension of HttpEntity that adds an HttpStatusCode status code. Used in RestTemplate as well as in @Controller methods.</li>
+      <li>Update registerUser to return <code>ResponseEntity &lt; Map &lt; String,String>></code> instead of String. Class <code>ResponseEntity</code> is an extension of HttpEntity that adds an HttpStatusCode status code. Used in RestTemplate as well as in @Controller methods.</li>
     </ul>
   </li>
   <li>Save, build, and test api endpoint using Postman. Select POST with url "https://http://localhost:8080/api/users/register". Select Body->raw->text->JSON and input below</li>
@@ -149,11 +157,76 @@ Spring Boot Notes:
       <li>View that the user was created.</li>
     </ul>
   </li>
-  <li>If you POST again, you will receive error message: "Email already in use".</li>
-  <li>If you POST again with wrong email pattern, you will receive error message: "Invalid email format".</li>
+  <li>In Postman, if you POST again, you will receive error message: "Email already in use".</li>
+  <li>In Postman, if you POST again with wrong email pattern, you will receive error message: "Invalid email format".</li>
 </ul>
 
-
+4-Login and Hashing Password
+<ul>
+  <li>In <code>UserResource</code> create new method loginUser to return <code>ResponseEntity &lt; Map &lt; String,String>></code>.</li>
+  <li>In <code>UserServiceImpl</code>, update <code>validateUser</code> to return a user using <code>userRepository.findByEmailAndPassword(email, password).</code></li>
+  <li>In <code>UserRepositoryImpl</code>, update <code>findByEmailAndPassword</code></li>
+  <li>Test with Postman.
+    <ul>
+      <li>POST to "http://localhost:8080/api/users/login"</li>
+      <li>
+        {
+          "email": "david@testmail.com",
+          "password": "test123"
+        }
+      </li>
+      <li>Should receive successful message. If using wrong email/password, should receive error message "Invalid email/password".</li>
+    </ul>
+  </li>
+  <li>Modify <code>pom.xml</code> and add dependency groupID:org.mindrot, artifact:jbcrypt, version:0.4</li>
+  <li>Modify <code>UserRepositoryImpl</code>. 
+    <ul>
+      <li>In <code>create</code> method, create new variable <code>hashedPassword</code> using <code>BCrypt.hashpw()</code>.</li>
+      <li>In <code>findByEmailAndPassword</code> method, modify if statement to check using <code>Bcrypt.checkpw()</code></li>
+    </ul>
+  </li>
+  <li>Delete user from db
+    <ul>
+      <li>~<code>docker container exec -it postgresdb psql -U postgres</code></li>
+      <li>~<code>\connect expensetrackerdb</code></li>
+      <li>~<code>delete from et_users;</code></li>
+    </ul>
+  </li>
+  <li>Test register with Postman.
+    <ul>
+      <li>POST to "http://localhost:8080/api/users/register"</li>
+      <li>
+        {
+          "firstName": "David",
+          "lastName": "Smith",
+          "email": "david@testmail.com",
+          "password": "test123"
+        }
+      </li>
+      <li>Should receive <code>{"message": "registered successfully"}</code></li>
+    </ul>
+  </li>
+  <li>Check expensetrackerdb for user registered.
+    <ul>
+      <li>~<code>docker container exec -it postgresdb psql -U postgres</code></li>
+      <li>~<code>\connect expensetrackerdb</code></li>
+      <li>select * from et_users;</li>
+      <li>View that the user was created with a hashed password.</li>
+    </ul>
+  </li>
+  <li>Test login with Postman.
+    <ul>
+      <li>POST to "http://localhost:8080/api/users/login"</li>
+      <li>
+        {
+          "email": "david@testmail.com",
+          "password": "test123"
+        }
+      </li>
+      <li>Should receive successful message. If using wrong email/password, should receive error message "Invalid email/password".</li>
+    </ul>
+  </li>
+</ul>
 
 
 
